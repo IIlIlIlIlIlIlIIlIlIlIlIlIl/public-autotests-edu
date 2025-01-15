@@ -20,22 +20,20 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Collections;
 
-public class VetClinicTests {
+public class UnitTests {
 
     RestTemplate restTemplate = new RestTemplate();
 
     @Test
-    @DisplayName("Создание пользователя с валидными id и именем")
+    @DisplayName("Добавление пользователя с заданными id и именем")
     @AllureId("1")
-    public void createUserWithValidData() {
+    public void test1() {
         String postUrl = "http://localhost:8080/api/person";
-
-        Person person = new Person(10L, "John Doe");
+        Person person = new Person(100L, "Alex");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-        step("Выполняем POST запрос для создания пользователя", () -> {
+        step("Выполняем POST /person с параметрами id = 100, name = 'Alex'", () -> {
             HttpEntity<Person> requestEntity = new HttpEntity<>(person, headers);
 
             ResponseEntity<Long> createPersonResponse = restTemplate.exchange(
@@ -45,11 +43,11 @@ public class VetClinicTests {
                     Long.class
             );
 
-            step("Убеждаемся, что ответ содержит id пользователя", () -> {
+            step("Убеждаемся, что в ответе POST /person вернулся id", () -> {
                 assertNotNull(createPersonResponse.getBody());
             });
 
-            step("Проверяем, что пользователь доступен через GET запрос", () -> {
+            step("Проверяем, что GET /person/{id} возвращает корректного пользователя", () -> {
                 String getUrl = "http://localhost:8080/api/person/%s".formatted(createPersonResponse.getBody());
                 ResponseEntity<Person> getResponseEntity = restTemplate.getForEntity(getUrl, Person.class);
 
@@ -61,17 +59,17 @@ public class VetClinicTests {
     }
 
     @Test
-    @DisplayName("Создание пользователя без id и с валидным именем")
+    @DisplayName("Добавление пользователя без id и с заданным именем")
     @AllureId("2")
-    public void createUserWithoutId() {
+    public void test2() {
         String postUrl = "http://localhost:8080/api/person";
 
-        Person person = new Person("Alice");
+        Person person = new Person("John");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        step("Выполняем POST запрос для создания пользователя без id", () -> {
+        step("Выполняем POST /person с параметрами id = null, name = 'John'", () -> {
             HttpEntity<Person> requestEntity = new HttpEntity<>(person, headers);
 
             ResponseEntity<Long> createPersonResponse = restTemplate.exchange(
@@ -81,11 +79,11 @@ public class VetClinicTests {
                     Long.class
             );
 
-            step("Проверяем, что ответ содержит id пользователя", () -> {
+            step("Убеждаемся, что в ответе POST /person вернулся id", () -> {
                 assertNotNull(createPersonResponse.getBody());
             });
 
-            step("Убеждаемся, что пользователь доступен через GET запрос", () -> {
+            step("Проверяем, что GET /person/{id} возвращает корректного пользователя", () -> {
                 String getUrl = "http://localhost:8080/api/person/%s".formatted(createPersonResponse.getBody());
                 ResponseEntity<Person> getResponseEntity = restTemplate.getForEntity(getUrl, Person.class);
 
@@ -99,57 +97,57 @@ public class VetClinicTests {
     @Test
     @DisplayName("Обновление информации о пользователе")
     @AllureId("3")
-    public void updateUserDetails() {
-        String url = "http://localhost:8080/api/person/15";
-
-        Person person = new Person("Robert");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-        step("Отправляем PUT запрос для изменения данных пользователя", () -> {
-            HttpEntity<Person> requestEntity = new HttpEntity<>(person, headers);
-
-            restTemplate.exchange(
-                    url,
-                    HttpMethod.PUT,
-                    requestEntity,
-                    Long.class
-            );
-
-            step("Проверяем, что имя пользователя обновилось", () -> {
-                String getUrl = "http://localhost:8080/api/person/15";
-                ResponseEntity<Person> getResponseEntity = restTemplate.getForEntity(getUrl, Person.class);
-
-                assertNotNull(getResponseEntity);
-                assertEquals("Robert", getResponseEntity.getBody().getName());
-            });
-        });
-    }
-
-    @Test
-    @DisplayName("Попытка обновления пользователя с несуществующим id")
-    @AllureId("4")
-    public void updateUserNonExistentId() {
-        String url = "http://localhost:8080/api/person/9999999";
+    public void test3() {
+        String url = "http://localhost:8080/api/person/5";
 
         Person person = new Person("Michael");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        step("Отправляем PUT запрос для обновления пользователя с несуществующим id", () -> {
+        step("Выполняем PUT /person для изменения данных пользователя", () -> {
+            HttpEntity<Person> requestEntity = new HttpEntity<>(person, headers);
+
+            ResponseEntity<Long> createPersonResponse = restTemplate.exchange(
+                    url,
+                    HttpMethod.PUT,
+                    requestEntity,
+                    Long.class
+            );
+
+            step("Убеждаемся, что GET /person/{id} возвращает обновленного пользователя", () -> {
+                String getUrl = "http://localhost:8080/api/person/5";
+                ResponseEntity<Person> getResponseEntity = restTemplate.getForEntity(getUrl, Person.class);
+
+                assertNotNull(getResponseEntity);
+                assertEquals("Michael", getResponseEntity.getBody().getName());
+            });
+        });
+    }
+
+    @Test
+    @DisplayName("Попытка обновления несуществующего пользователя")
+    @AllureId("4")
+    public void test4() {
+        String url = "http://localhost:8080/api/person/99999";
+
+        Person person = new Person("NonExistent");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        step("Выполняем PUT /person с несуществующим id", () -> {
             HttpEntity<Person> requestEntity = new HttpEntity<>(person, headers);
 
             try {
-                restTemplate.exchange(
+                ResponseEntity<Long> createPersonResponse = restTemplate.exchange(
                         url,
                         HttpMethod.PUT,
                         requestEntity,
                         Long.class
                 );
             } catch (Exception e) {
-                step("Проверяем, что сервер возвращает 404", () -> {
+                step("Убеждаемся, что сервер возвращает 404", () -> {
                     assertEquals(true, e.getMessage().contains("404"));
                 });
             }
@@ -157,30 +155,31 @@ public class VetClinicTests {
     }
 
     @Test
-    @DisplayName("Получение существующего пользователя")
+    @DisplayName("Получение данных существующего пользователя")
     @AllureId("5")
-    public void getExistingUser() {
-        String url = "http://localhost:8080/api/person/20";
+    public void test5() {
+        String url = "http://localhost:8080/api/person/2";
 
-        step("Отправляем GET запрос и проверяем данные пользователя", () -> {
+        step("Убеждаемся, что GET /person/{id} возвращает корректного пользователя", () -> {
             ResponseEntity<Person> getResponseEntity = restTemplate.getForEntity(url, Person.class);
 
             assertNotNull(getResponseEntity);
-            assertEquals("Emily", getResponseEntity.getBody().getName());
+            assertEquals("Michael", getResponseEntity.getBody().getName());
         });
     }
 
     @Test
-    @DisplayName("GET запрос с неверным id")
+    @DisplayName("Попытка получения пользователя с некорректным id")
     @AllureId("6")
-    public void getInvalidUserId() {
-        String url = "http://localhost:8080/api/person/987654321";
+    public void test6() {
+        String url = "http://localhost:8080/api/person/999999";
 
-        step("Убеждаемся, что сервер возвращает 404", () -> {
+        step("Убеждаемся, что GET /person/{id} возвращает 404", () -> {
             try {
                 restTemplate.getForEntity(url, Person.class);
                 assertEquals(true, false);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 assertEquals(true, e.getMessage().contains("404"));
             }
         });
@@ -189,48 +188,49 @@ public class VetClinicTests {
     @Test
     @DisplayName("Получение списка всех пользователей")
     @AllureId("7")
-    public void getAllUsers() {
+    public void test7() {
         String url = "http://localhost:8080/api/person";
 
-        step("Отправляем GET запрос и проверяем, что запрос успешен", () -> {
+        step("Проверяем, что GET /person возвращает успешный ответ", () -> {
             try {
                 ResponseEntity<Person[]> getResponseEntity = restTemplate.getForEntity(url, Person[].class);
 
                 assertEquals(getResponseEntity.getStatusCode(), HttpStatus.OK);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 assertEquals(true, false);
             }
         });
     }
 
     @Test
-    @DisplayName("Получение списка пользователей с ограничением размера")
+    @DisplayName("Получение списка пользователей с ограничением по количеству")
     @AllureId("8")
-    public void getUsersWithLimit() {
-        String url = "http://localhost:8080/api/person?size=5";
+    public void test8() {
+        String url = "http://localhost:8080/api/person?size=2";
 
-        step("Убеждаемся, что количество возвращенных пользователей соответствует указанному размеру", () -> {
+        step("Убеждаемся, что количество пользователей в ответе равно 2", () -> {
             ResponseEntity<Person[]> allUsersRes = restTemplate.getForEntity(url, Person[].class);
             Person[] allUsers = allUsersRes.getBody();
 
-            assertEquals(allUsers.length, 5);
+            assertEquals(allUsers.length, 2);
         });
     }
 
     @Test
     @DisplayName("Получение пользователей в обратном порядке")
     @AllureId("9")
-    public void getUsersInDescendingOrder() {
-        String url1 = "http://localhost:8080/api/person?size=10000000";
+    public void test9() {
+        String url1 = "http://localhost:8080/api/person?size=100";
 
-        step("Сортируем пользователей в обратном порядке и сверяем с результатом запроса", () -> {
+        step("Получаем всех пользователей и сортируем по убыванию id", () -> {
             ResponseEntity<Person[]> allUsersRes = restTemplate.getForEntity(url1, Person[].class);
             Person[] sortedPersons = allUsersRes.getBody();
 
             Arrays.sort(sortedPersons, Comparator.comparingLong(Person::getId).reversed());
 
-            step("Убеждаемся, что пользователи возвращены в порядке DESC", () -> {
-                String urlDesc = "http://localhost:8080/api/person?sort=DESC&size=10000000";
+            step("Убеждаемся, что GET /person?sort=DESC возвращает пользователей в том же порядке", () -> {
+                String urlDesc = "http://localhost:8080/api/person?sort=DESC&size=100";
 
                 ResponseEntity<Person[]> allUsersResDesc = restTemplate.getForEntity(urlDesc, Person[].class);
                 Person[] allUsersDesc = allUsersResDesc.getBody();
@@ -241,15 +241,15 @@ public class VetClinicTests {
     }
 
     @Test
-    @DisplayName("Удаление существующего пользователя")
+    @DisplayName("Удаление пользователя")
     @AllureId("10")
-    public void deleteUser() {
+    public void test10() {
         String url = "http://localhost:8080/api/person";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        Person person = new Person(200L, "TemporaryUser");
+        Person person = new Person(500L, "TestUser");
 
         step("Создаем пользователя для удаления", () -> {
             HttpEntity<Person> requestEntity = new HttpEntity<>(person, headers);
@@ -263,39 +263,40 @@ public class VetClinicTests {
 
             String personUrl = "http://localhost:8080/api/person/%s".formatted(createPersonResponse.getBody());
 
-            step("Отправляем DELETE запрос для удаления пользователя", () -> {
+            step("Выполняем DELETE /person", () -> {
                 restTemplate.exchange(
                         personUrl,
                         HttpMethod.DELETE,
                         requestEntity,
                         Long.class
                 );
-                step("Убеждаемся, что пользователь удален, выполняя GET запрос", () -> {
+                step("Убеждаемся, что GET /person/{id} возвращает 404", () -> {
                     try {
-                        restTemplate.getForEntity(personUrl, Person.class);
+                        ResponseEntity<Person> getResponseEntity = restTemplate.getForEntity(personUrl, Person.class);
                     } catch (Exception e) {
                         assertEquals(true, e.getMessage().contains("404"));
                     }
                 });
             });
         });
+
     }
 
     @Test
-    @DisplayName("Удаление пользователя с несуществующим id")
+    @DisplayName("Попытка удаления пользователя с несуществующим id")
     @AllureId("11")
-    public void deleteNonExistentUser() {
-        String url = "http://localhost:8080/api/person/555555";
+    public void test11() {
+        String url = "http://localhost:8080/api/person/99999";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        step("Отправляем DELETE запрос для несуществующего пользователя", () -> {
+        step("Выполняем DELETE /person с несуществующим id", () -> {
             try {
                 restTemplate.delete(url);
             } catch (Exception e) {
-                step("Проверяем, что сервер возвращает 409", () -> {
+                step("Убеждаемся, что сервер возвращает 409", () -> {
                     assertEquals(true, e.getMessage().contains("409"));
                 });
 
@@ -303,3 +304,4 @@ public class VetClinicTests {
         });
     }
 }
+
